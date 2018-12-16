@@ -1,0 +1,23 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "PointCloudGeneratorPlugin",
+	"Description": "Point Cloud Generation",
+	"Category": "Other",
+	"CreatedBy": "Jeremy Castagno",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "PointCloudGeneratorPlugin",
+			"Type": "Developer",
+			"LoadingPhase": "Default"
+		}
+	]
+}
