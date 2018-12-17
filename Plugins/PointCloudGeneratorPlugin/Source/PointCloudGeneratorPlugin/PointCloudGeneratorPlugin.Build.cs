@@ -1,23 +1,35 @@
 // Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
 
 using UnrealBuildTool;
+using System.IO;    ////for the Path
 
 public class PointCloudGeneratorPlugin : ModuleRules
 {
+    ///useful automations
+    public string ModulePath
+    {
+        get { return ModuleDirectory; }
+    }
+
+    public string ThirdPartyPath
+    {
+        get { return Path.GetFullPath(Path.Combine(ModulePath, "../ThirdParty/")); }
+    }
 	public PointCloudGeneratorPlugin(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-		
-		PublicIncludePaths.AddRange(
+
+
+        PublicIncludePaths.AddRange(
 			new string[] {
-				// ... add public include paths required here ...
-			}
+                ThirdPartyPath
+            }
 			);
 				
 		
 		PrivateIncludePaths.AddRange(
 			new string[] {
-				// ... add other private include paths required here ...
+				ThirdPartyPath
 			}
 			);
 			

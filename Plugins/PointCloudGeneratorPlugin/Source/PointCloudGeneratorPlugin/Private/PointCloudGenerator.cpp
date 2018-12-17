@@ -47,6 +47,10 @@ void APointCloudGenerator::TimerElapsed()
 	PointCloud pc;
 	GatherPoints(start, range, pc, resolution, showTrace, recordClasses);
 
+	
+
+	// save data
+	SaveFile(saveDirectory, pc);
 }
 
 
@@ -69,6 +73,10 @@ void APointCloudGenerator::GatherPoints(FVector start, FVector range, PointCloud
 			auto hit = GetWorld()->LineTraceSingleByChannel(hit_result, trace_start, trace_end, ECC_Visibility, trace_params);
 			if (hit)
 			{
+				pc.points.emplace_back(hit_result.ImpactPoint.X);
+				pc.points.emplace_back(hit_result.ImpactPoint.Y);
+				pc.points.emplace_back(hit_result.ImpactPoint.Z);
+
 				if (recordClasses)
 				{
 					auto display_name = hit_result.GetActor()->GetActorLabel();
@@ -76,23 +84,20 @@ void APointCloudGenerator::GatherPoints(FVector start, FVector range, PointCloud
 					// Check if the key exists
 					if (pc.class_mapping.find(display_name_str) != pc.class_mapping.end())
 					{
-						// If the class string key exists, then gets its integer mapping and add to class vector
-						pc.classes.push_back(pc.class_mapping[display_name_str]);
+						// convert integer class mapping to float and add to point vector
+						pc.points.emplace_back(static_cast<float>(pc.class_mapping[display_name_str]));
 					}
 					else
 					{
 						// else create new mapping and increment mapping count
 						pc.class_mapping[display_name_str] = numClasses;
-						pc.classes.push_back(numClasses);
+						pc.points.emplace_back(static_cast<float>(numClasses));
 						numClasses += 1;
 					}
 					//auto object_name = comp->GetName();
 					UE_LOG(LogTemp, Warning, TEXT("PointCloudGenerator: Hit Component %s, at (%f, %f)"), *display_name, x, y);
 				}
 
-				pc.points.emplace_back(hit_result.ImpactPoint.X);
-				pc.points.emplace_back(hit_result.ImpactPoint.Y);
-				pc.points.emplace_back(hit_result.ImpactPoint.Z);
 
 				if (trace)
 				{
@@ -110,6 +115,50 @@ void APointCloudGenerator::GatherPoints(FVector start, FVector range, PointCloud
 
 		}
 
+	}
+
+}
+
+int Map2JSON(std::string fname, std::unordered_map<std::string, int> &m) {
+	int count = 0;
+	if (m.empty())
+		return 0;
+
+	FILE *fp = fopen(fname.c_str(), "w");
+	if (!fp)
+		return -errno;
+	fprintf(fp, "{\n");
+	for (auto it = m.begin(); it != m.end(); it++) {
+		fprintf(fp, "\"%s\":%d\n", it->first.c_str(), it->second);
+		count++;
+	}
+	fprintf(fp, "}\n");
+
+	fclose(fp);
+	return count;
+}
+
+void APointCloudGenerator::SaveFile(FString saveDir, PointCloud &pc)
+{
+	if (FPaths::DirectoryExists(saveDir))
+	{
+		const long unsigned cols = recordClasses ? 4 : 3;
+		const long unsigned rows = pc.points.size() / cols;
+		const long unsigned leshape[] = { rows, cols };
+		//std::string saveDirStr = TCHAR_TO_UTF8(*saveDir);
+		//std::string numpyPath = saveDirStr + "/point_cloud.npy";
+		auto numpyPathF = FPaths::Combine(saveDir, FString("point_cloud.npy"));
+		npy::SaveArrayAsNumpy(TCHAR_TO_UTF8(*numpyPathF), false, 2, leshape, pc.points);
+		if (recordClasses)
+		{
+			auto classesPathF = FPaths::Combine(saveDir, FString("point_cloud_classes.json"));	
+			Map2JSON(TCHAR_TO_UTF8(*classesPathF), pc.class_mapping);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Error! Directory does not exist: %s"), *saveDir);
+		
 	}
 
 }
