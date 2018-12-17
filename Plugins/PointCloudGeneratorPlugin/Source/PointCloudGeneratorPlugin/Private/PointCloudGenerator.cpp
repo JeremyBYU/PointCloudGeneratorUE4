@@ -15,41 +15,30 @@ void APointCloudGenerator::BeginPlay()
 	// Timer put in because of paranio....
 	GetWorldTimerManager().SetTimer(
 		UnusedHandle, this, &APointCloudGenerator::TimerElapsed, 1, false);
-
-
-	//for (TActorIterator<AStaticMeshActor> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-	//{
-	//	// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
-	//	AStaticMeshActor *Mesh = *ActorItr;
-	//	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::Printf(TEXT("%s, %s"), *ActorItr->GetName(), *ActorItr->GetActorLocation().ToString()));
-	//	//ClientMessage(ActorItr->GetName());
-	//	//ClientMessage(ActorItr->GetActorLocation().ToString());
-	//}
 }
 
 
 void APointCloudGenerator::TimerElapsed()
 {
-	auto test = this->GetBounds();
+	auto bounds = this->GetBounds();
 
-	auto start_x = test.Origin.X - test.BoxExtent.X;
-	auto start_y = test.Origin.Y - test.BoxExtent.Y;
-	auto start_z = test.Origin.Z + test.BoxExtent.Z;
+	auto start_x = bounds.Origin.X - bounds.BoxExtent.X;
+	auto start_y = bounds.Origin.Y - bounds.BoxExtent.Y;
+	auto start_z = bounds.Origin.Z + bounds.BoxExtent.Z;
 
-	auto range_x = test.BoxExtent.X * 2;
-	auto range_y = test.BoxExtent.Y * 2;
-	auto range_z = test.BoxExtent.Z * 2;
+	auto range_x = bounds.BoxExtent.X * 2;
+	auto range_y = bounds.BoxExtent.Y * 2;
+	auto range_z = bounds.BoxExtent.Z * 2;
 
 	FVector start(start_x, start_y, start_z);
 	FVector range(range_x, range_y, range_z);
-	UE_LOG(LogTemp, Warning, TEXT("Resolution: %f; Trace: %d"), resolution, showTrace);
+	UE_LOG(LogTemp, Display, TEXT("Resolution: %f; Trace: %d; Record Classes: %d"), resolution, showTrace, recordClasses);
 
+	// Build Point Cloud
 	PointCloud pc;
 	GatherPoints(start, range, pc, resolution, showTrace, recordClasses);
 
-	
-
-	// save data
+	// Save data
 	SaveFile(saveDirectory, pc);
 }
 
@@ -94,8 +83,7 @@ void APointCloudGenerator::GatherPoints(FVector start, FVector range, PointCloud
 						pc.points.emplace_back(static_cast<float>(numClasses));
 						numClasses += 1;
 					}
-					//auto object_name = comp->GetName();
-					UE_LOG(LogTemp, Warning, TEXT("PointCloudGenerator: Hit Component %s, at (%f, %f)"), *display_name, x, y);
+					//UE_LOG(LogTemp, Warning, TEXT("PointCloudGenerator: Hit Component %s, at (%f, %f)"), *display_name, x, y);
 				}
 
 
@@ -106,7 +94,7 @@ void APointCloudGenerator::GatherPoints(FVector start, FVector range, PointCloud
 			}
 			else
 			{
-				UE_LOG(LogTemp, Warning, TEXT("PointCloudGenerator: No object hit in raycast (%f, %f)"), x, y);
+				//UE_LOG(LogTemp, Warning, TEXT("PointCloudGenerator: No object hit in raycast (%f, %f)"), x, y);
 				if (trace)
 				{
 					DrawDebugLine(GetWorld(), trace_start, trace_end, FColor::Red, true, 1, 0, 1);
@@ -145,13 +133,14 @@ void APointCloudGenerator::SaveFile(FString saveDir, PointCloud &pc)
 		const long unsigned cols = recordClasses ? 4 : 3;
 		const long unsigned rows = pc.points.size() / cols;
 		const long unsigned leshape[] = { rows, cols };
-		//std::string saveDirStr = TCHAR_TO_UTF8(*saveDir);
-		//std::string numpyPath = saveDirStr + "/point_cloud.npy";
+
 		auto numpyPathF = FPaths::Combine(saveDir, FString("point_cloud.npy"));
+		UE_LOG(LogTemp, Display, TEXT("Saving file: %s"), *numpyPathF);
 		npy::SaveArrayAsNumpy(TCHAR_TO_UTF8(*numpyPathF), false, 2, leshape, pc.points);
 		if (recordClasses)
 		{
-			auto classesPathF = FPaths::Combine(saveDir, FString("point_cloud_classes.json"));	
+			auto classesPathF = FPaths::Combine(saveDir, FString("point_cloud_classes.json"));
+			UE_LOG(LogTemp, Display, TEXT("Saving file: %s"), *classesPathF);
 			Map2JSON(TCHAR_TO_UTF8(*classesPathF), pc.class_mapping);
 		}
 	}
