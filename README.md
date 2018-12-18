@@ -41,6 +41,14 @@ There are additional settings that you can change as well:
 
 Once setting are configured just press the Play button on the editor.  The line trace (ray cast) will begin one second after the play button is pressed and generate the point cloud.  Data will be saved in a 2 dimensional numpy array in the save directory of choice.  A class mapping file is provided as well if Record Classes is checked.
 
+Example plot in matplotlib:
+
+![Screenshot](assets/point_cloud.PNG)
+
+Example plot for large point clouds using plas.io:
+
+![Screenshot](assets/point_cloud_las.PNG)
+
 
 ## Logging or Errors
 
