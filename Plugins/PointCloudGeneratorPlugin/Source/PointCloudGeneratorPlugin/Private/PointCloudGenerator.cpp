@@ -116,10 +116,13 @@ int Map2JSON(std::string fname, std::unordered_map<std::string, int> &m) {
 	if (!fp)
 		return -errno;
 	fprintf(fp, "{\n");
-	for (auto it = m.begin(); it != m.end(); it++) {
-		fprintf(fp, "\"%s\":%d\n", it->first.c_str(), it->second);
+	fprintf(fp, "  \"mapping\": {\n");
+	for (auto it = m.begin(); it != --m.end(); it++) {
+		fprintf(fp, "    \"%s\": %d,\n", it->first.c_str(), it->second);
 		count++;
 	}
+	fprintf(fp, "    \"%s\": %d\n", (--m.end())->first.c_str(), (--m.end())->second);
+	fprintf(fp, "  }\n");
 	fprintf(fp, "}\n");
 
 	fclose(fp);
