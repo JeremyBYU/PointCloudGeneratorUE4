@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <map>
 
 #include "CoreMinimal.h"
 #include "Engine/TriggerVolume.h"
@@ -42,6 +43,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Point Cloud Generation", META = (Name = "Save Directory"))
 		FString saveDirectory = FPaths::ConvertRelativePathToFull(FPaths::ProjectDir());
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Point Cloud Generation", META = (Name = "Enabled"))
+		bool enabled = true;
 
 
 

@@ -13,8 +13,15 @@ void APointCloudGenerator::BeginPlay()
 
 	FTimerHandle UnusedHandle;
 	// Timer put in because of paranio....
-	GetWorldTimerManager().SetTimer(
-		UnusedHandle, this, &APointCloudGenerator::TimerElapsed, 1, false);
+	if (enabled)
+	{
+		GetWorldTimerManager().SetTimer(
+			UnusedHandle, this, &APointCloudGenerator::TimerElapsed, 1, false);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Display, TEXT("PointCloudGenerator disabled."));
+	}
 }
 
 
@@ -112,17 +119,24 @@ int Map2JSON(std::string fname, std::unordered_map<std::string, int> &m) {
 	if (m.empty())
 		return 0;
 
+	// Now we want to transfer our unorderem_map into an ordered map
+	// unordered map was faster, but now we care about human readable output
+	std::map<int, std::string> ordered_map;
+	for (auto it = m.begin(); it != m.end(); it++) {
+		ordered_map[it->second] = it->first;
+	}
+
 	FILE *fp = fopen(fname.c_str(), "w");
 	if (!fp)
 		return -errno;
 	fprintf(fp, "{\n");
-	fprintf(fp, "  \"mapping\": {\n");
-	for (auto it = m.begin(); it != --m.end(); it++) {
-		fprintf(fp, "    \"%s\": %d,\n", it->first.c_str(), it->second);
+	fprintf(fp, "  \"classes\": [\n");
+	for (auto it = ordered_map.begin(); it != --ordered_map.end(); it++) {
+		fprintf(fp, "    \"%s\",\n", it->second.c_str());
 		count++;
 	}
-	fprintf(fp, "    \"%s\": %d\n", (--m.end())->first.c_str(), (--m.end())->second);
-	fprintf(fp, "  }\n");
+	fprintf(fp, "    \"%s\"\n", (--ordered_map.end())->second.c_str());
+	fprintf(fp, "  ]\n");
 	fprintf(fp, "}\n");
 
 	fclose(fp);
